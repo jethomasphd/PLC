@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080C1A">
-  <title>Town Line — Porch Light Council</title>
+  <title>Thread — Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -14,14 +14,14 @@
       <p class="site-location">Santa Rita Ranch</p>
       <nav>
         <a href="/">Board</a>
-        <a href="/town-line" class="active">Town Line</a>
+        <a href="/thread" class="active">Thread</a>
         <a href="/ledger">Ledger</a>
         <a href="/covenant">Covenant</a>
       </nav>
     </header>
 
     <main>
-      <h2 class="page-title">Town Line</h2>
+      <h2 class="page-title">Thread</h2>
 
       <div class="filter-bar">
         <button class="filter-pill active" data-type="">All</button>
@@ -83,7 +83,7 @@
             <div class="char-count" id="char-count">0 / 500</div>
           </div>
 
-          <button class="btn" id="submit-btn" disabled>Post to the Town Line</button>
+          <button class="btn" id="submit-btn" disabled>Post</button>
           <div class="pow-status hidden" id="pow-status"></div>
         </div>
 
@@ -145,7 +145,6 @@
       return div.innerHTML;
     }
 
-    // Filter pills
     document.querySelectorAll('.filter-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
@@ -155,7 +154,6 @@
       });
     });
 
-    // Covenant gate
     const covBoxes = [document.getElementById('cov-1'), document.getElementById('cov-2'), document.getElementById('cov-3')];
     const composeForm = document.getElementById('compose-form');
 
@@ -168,7 +166,6 @@
     }
     covBoxes.forEach(cb => cb.addEventListener('change', checkCovenant));
 
-    // Character count
     const bodyInput = document.getElementById('msg-body');
     const charCount = document.getElementById('char-count');
     const submitBtn = document.getElementById('submit-btn');
@@ -180,7 +177,6 @@
       submitBtn.disabled = len === 0 || len > 500;
     });
 
-    // Submit
     submitBtn.addEventListener('click', async () => {
       const passphrase = document.getElementById('passphrase').value.trim();
       const meetingId = document.getElementById('meeting-id').value.trim();
@@ -232,7 +228,6 @@
           return;
         }
 
-        // Show lantern receipt
         powStatus.classList.add('hidden');
         composeForm.classList.add('hidden');
         document.getElementById('covenant-gate').classList.add('hidden');
