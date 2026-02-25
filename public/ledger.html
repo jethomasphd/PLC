@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ledger — Porch Light Council</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="site-header">
+      <div class="header-inner">
+        <img src="/assets/logo/porch-light-council_santa-rita-ranch.png" alt="Porch Light Council" class="logo-badge">
+        <h1 class="site-title"><a href="/">Porch Light Council</a></h1>
+      </div>
+      <nav>
+        <a href="/">The Board</a>
+        <a href="/town-line">Town Line</a>
+        <a href="/ledger" class="active">Ledger</a>
+        <a href="/covenant">Covenant</a>
+      </nav>
+    </header>
+
+    <main>
+      <h2 class="page-title">The Ledger</h2>
+      <p class="page-subtitle">A rolling record. Meetups, topics, takeaways.</p>
+
+      <div id="ledger-list">
+        <div class="loading">Loading ledger...</div>
+      </div>
+
+      <!-- Compose ledger entry (facilitators) -->
+      <div class="compose-section">
+        <div class="section-label">Add Ledger Entry</div>
+        <p class="detail-line" style="margin-bottom: 16px">For facilitators. Requires the council passphrase.</p>
+
+        <div class="compose-form">
+          <div class="passphrase-group">
+            <label for="ledger-passphrase">Council Passphrase</label>
+            <input type="password" id="ledger-passphrase" placeholder="Shared in person">
+          </div>
+
+          <div class="form-group">
+            <label for="ledger-meeting-id">Meeting ID (date)</label>
+            <input type="text" id="ledger-meeting-id" placeholder="2026-02-24">
+          </div>
+
+          <div class="form-group">
+            <label for="ledger-topics">Topics (one per line)</label>
+            <textarea id="ledger-topics" placeholder="Homeschool vs public school&#10;The weight of being a dad&#10;Screen time and exercise"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="ledger-takeaway">Takeaway</label>
+            <input type="text" id="ledger-takeaway" placeholder="One shared takeaway from the group">
+          </div>
+
+          <div class="form-group">
+            <label for="ledger-actions">Next Actions (one per line, optional)</label>
+            <textarea id="ledger-actions" placeholder="Read chapter 3&#10;Try 10 minutes of floor time"></textarea>
+          </div>
+
+          <button class="btn" id="ledger-submit-btn">Post Ledger Entry</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      Porch Light Council &middot; Santa Rita Ranch &middot; Show up. Hold steady. Bring it home.
+    </footer>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    async function loadLedger() {
+      const list = document.getElementById('ledger-list');
+
+      try {
+        const res = await fetch('/api/ledger');
+        const data = await res.json();
+
+        if (!data.entries || data.entries.length === 0) {
+          list.innerHTML = '<div class="empty-state">No ledger entries yet.</div>';
+          return;
+        }
+
+        list.innerHTML = data.entries.map(entry => `
+          <div class="ledger-entry">
+            <div class="ledger-date">${formatDate(entry.date)}</div>
+            <ul class="card">
+              ${entry.topics.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+            </ul>
+            <div class="ledger-takeaway">"${escapeHtml(entry.takeaway)}"</div>
+            ${entry.nextActions && entry.nextActions.length > 0 ? `
+              <div style="margin-top: 12px">
+                <span class="detail-line">Next actions:</span>
+                <ul class="card" style="margin-top: 4px; box-shadow: none; border: none; padding: 0 0 0 4px; background: transparent">
+                  ${entry.nextActions.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = '<div class="empty-state">No ledger entries yet.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Submit ledger entry
+    document.getElementById('ledger-submit-btn').addEventListener('click', async () => {
+      const passphrase = document.getElementById('ledger-passphrase').value.trim();
+      const meetingId = document.getElementById('ledger-meeting-id').value.trim();
+      const topicsRaw = document.getElementById('ledger-topics').value.trim();
+      const takeaway = document.getElementById('ledger-takeaway').value.trim();
+      const actionsRaw = document.getElementById('ledger-actions').value.trim();
+
+      if (!passphrase) { alert('Enter the council passphrase.'); return; }
+      if (!meetingId) { alert('Enter the meeting date.'); return; }
+      if (!topicsRaw) { alert('Enter at least one topic.'); return; }
+      if (!takeaway) { alert('Enter the takeaway.'); return; }
+
+      const topics = topicsRaw.split('\n').map(t => t.trim()).filter(Boolean);
+      const nextActions = actionsRaw ? actionsRaw.split('\n').map(a => a.trim()).filter(Boolean) : [];
+
+      const btn = document.getElementById('ledger-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Posting...';
+
+      try {
+        const payload = {
+          meetingId,
+          date: meetingId,
+          topics,
+          takeaway,
+          nextActions,
+          updatedTs: Math.floor(Date.now() / 1000)
+        };
+
+        const sig = await signPayload(passphrase, meetingId, payload);
+
+        const res = await fetch('/api/ledger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, sig })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          alert(result.error || 'Failed to post');
+          btn.disabled = false;
+          btn.textContent = 'Post Ledger Entry';
+          return;
+        }
+
+        btn.textContent = 'Posted';
+        loadLedger();
+      } catch (e) {
+        alert('Error: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Post Ledger Entry';
+      }
+    });
+
+    loadLedger();
+  </script>
+</body>
+</html>

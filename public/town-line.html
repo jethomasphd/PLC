@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Town Line — Porch Light Council</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="site-header">
+      <div class="header-inner">
+        <img src="/assets/logo/porch-light-council_santa-rita-ranch.png" alt="Porch Light Council" class="logo-badge">
+        <h1 class="site-title"><a href="/">Porch Light Council</a></h1>
+      </div>
+      <nav>
+        <a href="/">The Board</a>
+        <a href="/town-line" class="active">Town Line</a>
+        <a href="/ledger">Ledger</a>
+        <a href="/covenant">Covenant</a>
+      </nav>
+    </header>
+
+    <main>
+      <h2 class="page-title">Town Line</h2>
+      <p class="page-subtitle">Real talk. Flat list. Most recent first.</p>
+
+      <!-- Filter -->
+      <div class="filter-bar">
+        <button class="filter-pill active" data-type="">All</button>
+        <button class="filter-pill" data-type="WIN">Win</button>
+        <button class="filter-pill" data-type="STRUGGLE">Struggle</button>
+        <button class="filter-pill" data-type="ASK">Ask</button>
+        <button class="filter-pill" data-type="OFFER">Offer</button>
+        <button class="filter-pill" data-type="READING">Reading</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="messages-list">
+        <div class="loading">Loading messages...</div>
+      </div>
+
+      <!-- Compose -->
+      <div class="compose-section">
+        <div class="section-label">Post a Message</div>
+
+        <!-- Covenant gate -->
+        <div class="covenant-checks" id="covenant-gate">
+          <p class="detail-line" style="margin-bottom: 12px">Before you post, affirm the covenant:</p>
+          <label class="covenant-check">
+            <input type="checkbox" id="cov-1">
+            <span>Not politics. Not therapy. Not a feed.</span>
+          </label>
+          <label class="covenant-check">
+            <input type="checkbox" id="cov-2">
+            <span>Be brief. Be real. Be useful.</span>
+          </label>
+          <label class="covenant-check">
+            <input type="checkbox" id="cov-3">
+            <span>Assume goodwill.</span>
+          </label>
+        </div>
+
+        <div class="compose-form hidden" id="compose-form">
+          <div class="passphrase-group">
+            <label for="passphrase">Council Passphrase</label>
+            <input type="password" id="passphrase" placeholder="Shared in person at meetups">
+          </div>
+
+          <div class="form-group">
+            <label for="meeting-id">Meeting ID (date)</label>
+            <input type="text" id="meeting-id" placeholder="2026-03-03">
+          </div>
+
+          <div class="form-group">
+            <label for="msg-type">Type</label>
+            <select id="msg-type">
+              <option value="WIN">Win — one win</option>
+              <option value="STRUGGLE">Struggle — one pressure point</option>
+              <option value="ASK">Ask — one question</option>
+              <option value="OFFER">Offer — one offer of help</option>
+              <option value="READING">Reading — one quote + why</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="msg-body">Message</label>
+            <textarea id="msg-body" maxlength="500" placeholder="Keep it short. Keep it real."></textarea>
+            <div class="char-count" id="char-count">0 / 500</div>
+          </div>
+
+          <button class="btn" id="submit-btn" disabled>Post to the Town Line</button>
+          <div class="pow-status hidden" id="pow-status"></div>
+        </div>
+
+        <!-- Lantern Receipt -->
+        <div class="lantern-receipt hidden" id="lantern-receipt">
+          <h3>Lantern Receipt</h3>
+          <p class="receipt-detail">Your message is posted. No name. No trace. Just proof.</p>
+          <div class="receipt-id" id="receipt-id">
+            <span id="receipt-hash"></span>
+            <button class="btn btn-small" id="copy-receipt">Copy</button>
+          </div>
+          <p class="receipt-detail" id="receipt-ts"></p>
+          <p class="receipt-detail" id="receipt-type"></p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      Porch Light Council &middot; Santa Rita Ranch &middot; Show up. Hold steady. Bring it home.
+    </footer>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script>
+    // State
+    let currentFilter = '';
+
+    // Load messages
+    async function loadMessages(type) {
+      const list = document.getElementById('messages-list');
+      list.innerHTML = '<div class="loading">Loading messages...</div>';
+
+      try {
+        let url = '/api/messages?limit=25';
+        if (type) url += '&type=' + type;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.messages || data.messages.length === 0) {
+          list.innerHTML = '<div class="empty-state">No messages yet. Be the first to post.</div>';
+          return;
+        }
+
+        list.innerHTML = data.messages.map(msg => `
+          <div class="message-item">
+            <div class="message-meta">
+              <span class="message-type ${msg.type.toLowerCase()}">${msg.type}</span>
+              <span class="message-ts">${formatTimestamp(msg.ts)}</span>
+            </div>
+            <div class="message-body">${escapeHtml(msg.body)}</div>
+            <div class="message-id">${msg.id ? msg.id.substring(0, 16) + '...' : ''}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        list.innerHTML = '<div class="empty-state">No messages yet. Be the first to post.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Filter pills
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.dataset.type;
+        loadMessages(currentFilter);
+      });
+    });
+
+    // Covenant gate
+    const covBoxes = [document.getElementById('cov-1'), document.getElementById('cov-2'), document.getElementById('cov-3')];
+    const composeForm = document.getElementById('compose-form');
+
+    function checkCovenant() {
+      if (covBoxes.every(cb => cb.checked)) {
+        composeForm.classList.remove('hidden');
+      } else {
+        composeForm.classList.add('hidden');
+      }
+    }
+    covBoxes.forEach(cb => cb.addEventListener('change', checkCovenant));
+
+    // Character count
+    const bodyInput = document.getElementById('msg-body');
+    const charCount = document.getElementById('char-count');
+    const submitBtn = document.getElementById('submit-btn');
+
+    bodyInput.addEventListener('input', () => {
+      const len = bodyInput.value.length;
+      charCount.textContent = len + ' / 500';
+      charCount.className = 'char-count' + (len > 500 ? ' over' : '');
+      submitBtn.disabled = len === 0 || len > 500;
+    });
+
+    // Submit message
+    submitBtn.addEventListener('click', async () => {
+      const passphrase = document.getElementById('passphrase').value.trim();
+      const meetingId = document.getElementById('meeting-id').value.trim();
+      const type = document.getElementById('msg-type').value;
+      const body = bodyInput.value.trim();
+
+      if (!passphrase) { alert('Enter the council passphrase.'); return; }
+      if (!meetingId) { alert('Enter the meeting ID (date).'); return; }
+      if (!body || body.length > 500) return;
+
+      submitBtn.disabled = true;
+      const powStatus = document.getElementById('pow-status');
+      powStatus.classList.remove('hidden');
+      powStatus.classList.add('working');
+      powStatus.textContent = 'Solving proof-of-work...';
+
+      try {
+        // Build payload without pow
+        const payloadNoPow = {
+          v: 1,
+          ts: Math.floor(Date.now() / 1000),
+          meetingId: meetingId,
+          type: type,
+          body: body
+        };
+
+        // Solve PoW
+        const canonicalNoPow = canonicalJson(payloadNoPow);
+        const pow = await solvePoW(canonicalNoPow, 18, (n, elapsed) => {
+          powStatus.textContent = `Solving proof-of-work... ${n} attempts (${elapsed}s)`;
+        });
+
+        powStatus.textContent = 'Proof-of-work solved. Signing...';
+
+        // Build full payload with pow
+        const payload = { ...payloadNoPow, pow: pow };
+
+        // Sign
+        const sig = await signPayload(passphrase, meetingId, payload);
+
+        powStatus.textContent = 'Posting...';
+
+        // Submit
+        const res = await fetch('/api/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, sig: sig })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          alert(result.error || 'Failed to post');
+          powStatus.classList.add('hidden');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // Show lantern receipt
+        powStatus.classList.add('hidden');
+        composeForm.classList.add('hidden');
+        document.getElementById('covenant-gate').classList.add('hidden');
+
+        const receipt = document.getElementById('lantern-receipt');
+        receipt.classList.remove('hidden');
+        document.getElementById('receipt-hash').textContent = result.id;
+        document.getElementById('receipt-ts').textContent = 'Posted: ' + formatTimestamp(payload.ts);
+        document.getElementById('receipt-type').textContent = 'Type: ' + type;
+
+        document.getElementById('copy-receipt').addEventListener('click', function() {
+          copyToClipboard(result.id, this);
+        });
+
+        // Reload messages
+        loadMessages(currentFilter);
+
+      } catch (e) {
+        alert('Error: ' + e.message);
+        powStatus.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Initial load
+    loadMessages('');
+  </script>
+</body>
+</html>
