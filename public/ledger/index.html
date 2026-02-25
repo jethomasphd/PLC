@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080C1A">
   <title>Ledger — Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -10,8 +11,9 @@
   <div class="container">
     <header class="site-header">
       <h1 class="site-title"><a href="/">Porch Light Council</a></h1>
+      <p class="site-location">Santa Rita Ranch</p>
       <nav>
-        <a href="/">The Board</a>
+        <a href="/">Board</a>
         <a href="/town-line">Town Line</a>
         <a href="/ledger" class="active">Ledger</a>
         <a href="/covenant">Covenant</a>
@@ -19,8 +21,7 @@
     </header>
 
     <main>
-      <h2 class="page-title">The Ledger</h2>
-      <p class="page-subtitle">A rolling record. Meetups, topics, takeaways.</p>
+      <h2 class="page-title">Ledger</h2>
 
       <div id="ledger-list">
         <div class="loading">Loading ledger...</div>
@@ -28,17 +29,16 @@
 
       <!-- Compose ledger entry (facilitators) -->
       <div class="compose-section">
-        <div class="section-label">Add Ledger Entry</div>
-        <p class="detail-line" style="margin-bottom: 16px">For facilitators. Requires the council passphrase.</p>
+        <div class="label">Add Entry</div>
 
         <div class="compose-form">
           <div class="passphrase-group">
             <label for="ledger-passphrase">Council Passphrase</label>
-            <input type="password" id="ledger-passphrase" placeholder="Shared in person">
+            <input type="password" id="ledger-passphrase" placeholder="Shared at meetups">
           </div>
 
           <div class="form-group">
-            <label for="ledger-meeting-id">Meeting ID (date)</label>
+            <label for="ledger-meeting-id">Meeting Date</label>
             <input type="date" id="ledger-meeting-id">
           </div>
 
@@ -63,7 +63,7 @@
     </main>
 
     <footer class="site-footer">
-      Porch Light Council &middot; Santa Rita Ranch &middot; Show up. Hold steady. Bring it home.
+      <p>Show up. Hold steady. Bring it home.</p>
     </footer>
   </div>
 
@@ -84,17 +84,14 @@
         list.innerHTML = data.entries.map(entry => `
           <div class="ledger-entry">
             <div class="ledger-date">${formatDate(entry.date)}</div>
-            <ul class="card">
+            <ul class="ledger-topics">
               ${entry.topics.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
             </ul>
             <div class="ledger-takeaway">"${escapeHtml(entry.takeaway)}"</div>
             ${entry.nextActions && entry.nextActions.length > 0 ? `
-              <div style="margin-top: 12px">
-                <span class="detail-line">Next actions:</span>
-                <ul class="card" style="margin-top: 4px; box-shadow: none; border: none; padding: 0 0 0 4px; background: transparent">
-                  ${entry.nextActions.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
-                </ul>
-              </div>
+              <ul class="ledger-actions">
+                ${entry.nextActions.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
+              </ul>
             ` : ''}
           </div>
         `).join('');
@@ -109,7 +106,6 @@
       return div.innerHTML;
     }
 
-    // Submit ledger entry
     document.getElementById('ledger-submit-btn').addEventListener('click', async () => {
       const passphrase = document.getElementById('ledger-passphrase').value.trim();
       const meetingId = document.getElementById('ledger-meeting-id').value.trim();

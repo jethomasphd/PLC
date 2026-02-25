@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Porch Board — Porch Light Council</title>
+  <meta name="theme-color" content="#080C1A">
+  <title>Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <div class="container">
     <header class="site-header">
       <h1 class="site-title"><a href="/">Porch Light Council</a></h1>
+      <p class="site-location">Santa Rita Ranch</p>
       <nav>
-        <a href="/" class="active">The Board</a>
+        <a href="/" class="active">Board</a>
         <a href="/town-line">Town Line</a>
         <a href="/ledger">Ledger</a>
         <a href="/covenant">Covenant</a>
@@ -19,36 +21,30 @@
     </header>
 
     <main>
-      <h2 class="page-title">The Board</h2>
-      <p class="page-subtitle">Keep the light on.</p>
-
-      <!-- Next Meetup -->
       <section>
-        <div class="section-label">Next Meetup</div>
-        <div class="card" id="next-meetup">
-          <div class="loading">Loading...</div>
+        <div class="label">Next Meetup</div>
+        <div id="next-meetup">
+          <p class="loading">Loading...</p>
         </div>
       </section>
 
-      <!-- Last Meetup -->
       <section>
-        <div class="section-label">Last Meetup</div>
-        <div class="card" id="last-meetup">
-          <div class="loading">Loading...</div>
+        <div class="label">Last Time Around</div>
+        <div id="last-meetup">
+          <p class="loading">Loading...</p>
         </div>
       </section>
 
-      <!-- Open Reading -->
       <section>
-        <div class="section-label">Open Reading</div>
-        <div class="card" id="open-reading">
-          <div class="loading">Loading...</div>
+        <div class="label">Open Reading</div>
+        <div id="open-reading">
+          <p class="loading">Loading...</p>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      Porch Light Council &middot; Santa Rita Ranch &middot; Show up. Hold steady. Bring it home.
+      <p>Show up. Hold steady. Bring it home.</p>
     </footer>
   </div>
 
@@ -56,44 +52,38 @@
   <script>
     async function loadBoard() {
       try {
-        const res = await fetch('/api/board');
-        const data = await res.json();
-        renderBoard(data);
-      } catch (e) {
-        // Fallback to static
+        let data;
         try {
+          const res = await fetch('/api/board');
+          if (res.ok) data = await res.json();
+        } catch {}
+
+        if (!data) {
           const res = await fetch('/data/board.json');
-          const data = await res.json();
-          renderBoard(data);
-        } catch (e2) {
-          document.getElementById('next-meetup').innerHTML = '<p>Could not load board data.</p>';
+          data = await res.json();
         }
+
+        const nm = data.nextMeetup;
+        document.getElementById('next-meetup').innerHTML = `
+          <div class="meetup-date">${formatDate(nm.date)}</div>
+          <div class="meetup-detail">${nm.time} · ${nm.location}</div>
+          ${nm.note ? `<p class="meetup-note">${nm.note}</p>` : ''}
+        `;
+
+        const lm = data.lastMeetup;
+        document.getElementById('last-meetup').innerHTML = `
+          <ul class="topic-list">${lm.topics.map(t => `<li>${t}</li>`).join('')}</ul>
+          ${lm.takeaway ? `<div class="takeaway">${lm.takeaway}</div>` : ''}
+        `;
+
+        const or = data.openReading;
+        document.getElementById('open-reading').innerHTML = `
+          <p class="reading-title">${or.title}</p>
+          <p class="reading-prompt">${or.prompt}</p>
+        `;
+      } catch (e) {
+        console.error('Failed to load board:', e);
       }
-    }
-
-    function renderBoard(data) {
-      // Next meetup
-      const next = data.nextMeetup;
-      document.getElementById('next-meetup').innerHTML = `
-        <h3>${formatDate(next.date)} &middot; ${next.time}</h3>
-        <p>${next.location}</p>
-        <p class="detail-line" style="margin-top: 8px">${next.note}</p>
-      `;
-
-      // Last meetup
-      const last = data.lastMeetup;
-      document.getElementById('last-meetup').innerHTML = `
-        <h3>${formatDate(last.date)}</h3>
-        <ul>${last.topics.map(t => `<li>${t}</li>`).join('')}</ul>
-        <p class="gold-text" style="margin-top: 12px; font-style: italic">"${last.takeaway}"</p>
-      `;
-
-      // Open reading
-      const reading = data.openReading;
-      document.getElementById('open-reading').innerHTML = `
-        <h3>${reading.title}</h3>
-        <p class="glow-text">${reading.prompt}</p>
-      `;
     }
 
     loadBoard();

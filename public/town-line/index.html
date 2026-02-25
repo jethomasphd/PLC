@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080C1A">
   <title>Town Line — Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -10,8 +11,9 @@
   <div class="container">
     <header class="site-header">
       <h1 class="site-title"><a href="/">Porch Light Council</a></h1>
+      <p class="site-location">Santa Rita Ranch</p>
       <nav>
-        <a href="/">The Board</a>
+        <a href="/">Board</a>
         <a href="/town-line" class="active">Town Line</a>
         <a href="/ledger">Ledger</a>
         <a href="/covenant">Covenant</a>
@@ -20,9 +22,7 @@
 
     <main>
       <h2 class="page-title">Town Line</h2>
-      <p class="page-subtitle">Real talk. Flat list. Most recent first.</p>
 
-      <!-- Filter -->
       <div class="filter-bar">
         <button class="filter-pill active" data-type="">All</button>
         <button class="filter-pill" data-type="WIN">Win</button>
@@ -32,18 +32,15 @@
         <button class="filter-pill" data-type="READING">Reading</button>
       </div>
 
-      <!-- Messages -->
       <div id="messages-list">
         <div class="loading">Loading messages...</div>
       </div>
 
       <!-- Compose -->
       <div class="compose-section">
-        <div class="section-label">Post a Message</div>
+        <div class="label">Post</div>
 
-        <!-- Covenant gate -->
-        <div class="covenant-checks" id="covenant-gate">
-          <p class="detail-line" style="margin-bottom: 12px">Before you post, affirm the covenant:</p>
+        <div class="covenant-gate" id="covenant-gate">
           <label class="covenant-check">
             <input type="checkbox" id="cov-1">
             <span>Not politics. Not therapy. Not a feed.</span>
@@ -61,28 +58,28 @@
         <div class="compose-form hidden" id="compose-form">
           <div class="passphrase-group">
             <label for="passphrase">Council Passphrase</label>
-            <input type="password" id="passphrase" placeholder="Shared in person at meetups">
+            <input type="password" id="passphrase" placeholder="Shared at meetups">
           </div>
 
           <div class="form-group">
-            <label for="meeting-id">Meeting ID (date)</label>
+            <label for="meeting-id">Meeting Date</label>
             <input type="date" id="meeting-id">
           </div>
 
           <div class="form-group">
             <label for="msg-type">Type</label>
             <select id="msg-type">
-              <option value="WIN">Win — one win</option>
-              <option value="STRUGGLE">Struggle — one pressure point</option>
-              <option value="ASK">Ask — one question</option>
-              <option value="OFFER">Offer — one offer of help</option>
-              <option value="READING">Reading — one quote + why</option>
+              <option value="WIN">Win</option>
+              <option value="STRUGGLE">Struggle</option>
+              <option value="ASK">Ask</option>
+              <option value="OFFER">Offer</option>
+              <option value="READING">Reading</option>
             </select>
           </div>
 
           <div class="form-group">
             <label for="msg-body">Message</label>
-            <textarea id="msg-body" maxlength="500" placeholder="Keep it short. Keep it real."></textarea>
+            <textarea id="msg-body" maxlength="500" placeholder="Say what matters."></textarea>
             <div class="char-count" id="char-count">0 / 500</div>
           </div>
 
@@ -90,11 +87,10 @@
           <div class="pow-status hidden" id="pow-status"></div>
         </div>
 
-        <!-- Lantern Receipt -->
         <div class="lantern-receipt hidden" id="lantern-receipt">
           <h3>Lantern Receipt</h3>
-          <p class="receipt-detail">Your message is posted. No name. No trace. Just proof.</p>
-          <div class="receipt-id" id="receipt-id">
+          <p class="receipt-detail">No name. No trace. Just proof you were here.</p>
+          <div class="receipt-id">
             <span id="receipt-hash"></span>
             <button class="btn btn-small" id="copy-receipt">Copy</button>
           </div>
@@ -105,16 +101,14 @@
     </main>
 
     <footer class="site-footer">
-      Porch Light Council &middot; Santa Rita Ranch &middot; Show up. Hold steady. Bring it home.
+      <p>Show up. Hold steady. Bring it home.</p>
     </footer>
   </div>
 
   <script src="/js/shared.js"></script>
   <script>
-    // State
     let currentFilter = '';
 
-    // Load messages
     async function loadMessages(type) {
       const list = document.getElementById('messages-list');
       list.innerHTML = '<div class="loading">Loading messages...</div>';
@@ -186,7 +180,7 @@
       submitBtn.disabled = len === 0 || len > 500;
     });
 
-    // Submit message
+    // Submit
     submitBtn.addEventListener('click', async () => {
       const passphrase = document.getElementById('passphrase').value.trim();
       const meetingId = document.getElementById('meeting-id').value.trim();
@@ -194,7 +188,7 @@
       const body = bodyInput.value.trim();
 
       if (!passphrase) { alert('Enter the council passphrase.'); return; }
-      if (!meetingId) { alert('Enter the meeting ID (date).'); return; }
+      if (!meetingId) { alert('Enter the meeting date.'); return; }
       if (!body || body.length > 500) return;
 
       submitBtn.disabled = true;
@@ -204,7 +198,6 @@
       powStatus.textContent = 'Solving proof-of-work...';
 
       try {
-        // Build payload without pow
         const payloadNoPow = {
           v: 1,
           ts: Math.floor(Date.now() / 1000),
@@ -213,23 +206,17 @@
           body: body
         };
 
-        // Solve PoW
         const canonicalNoPow = canonicalJson(payloadNoPow);
         const pow = await solvePoW(canonicalNoPow, 18, (n, elapsed) => {
           powStatus.textContent = `Solving proof-of-work... ${n} attempts (${elapsed}s)`;
         });
 
-        powStatus.textContent = 'Proof-of-work solved. Signing...';
-
-        // Build full payload with pow
+        powStatus.textContent = 'Signing...';
         const payload = { ...payloadNoPow, pow: pow };
-
-        // Sign
         const sig = await signPayload(passphrase, meetingId, payload);
 
         powStatus.textContent = 'Posting...';
 
-        // Submit
         const res = await fetch('/api/message', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -260,7 +247,6 @@
           copyToClipboard(result.id, this);
         });
 
-        // Reload messages
         loadMessages(currentFilter);
 
       } catch (e) {
@@ -270,7 +256,6 @@
       }
     });
 
-    // Initial load
     loadMessages('');
   </script>
 </body>
