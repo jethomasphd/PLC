@@ -1,0 +1,24 @@
+{
+  "nextMeetup": {
+    "date": "2026-03-03",
+    "time": "6:00 PM",
+    "location": "Santa Rita Ranch — Homestead Pavilion",
+    "note": "Bring a chair. Coffee welcome."
+  },
+  "lastMeetup": {
+    "date": "2026-02-24",
+    "topics": [
+      "Homeschool vs public school",
+      "Daycare vs nanny",
+      "The weight of being a dad",
+      "Job market brokenness",
+      "AI: potential and woes",
+      "Screen time and exercise"
+    ],
+    "takeaway": "We draw our own line: show up for our homes first."
+  },
+  "openReading": {
+    "title": "Short essay / excerpt (rotates)",
+    "prompt": "Bring one quote and one question for next time."
+  }
+}

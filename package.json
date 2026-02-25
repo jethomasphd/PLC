@@ -1,0 +1,12 @@
+{
+  "name": "porch-board",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx wrangler pages dev public --kv PLC_KV --compatibility-date 2024-01-01",
+    "deploy": "npx wrangler pages deploy public --project-name porch-board"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
