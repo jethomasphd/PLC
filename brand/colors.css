@@ -1,0 +1,36 @@
+:root {
+  --plc-ink: #000010;
+  --plc-navy: #000020;
+  --plc-deep-navy: #001020;
+  --plc-midnight: #001030;
+
+  --plc-cream: #F0F0C0;
+  --plc-paper: #F0F0F0;
+
+  --plc-gold: #D09040;
+  --plc-gold-soft: #F0D070;
+
+  --plc-char: #101020;
+  --plc-char-2: #101030;
+
+  /* semantic */
+  --bg: var(--plc-navy);
+  --surface: var(--plc-deep-navy);
+  --text: var(--plc-cream);
+  --text-strong: var(--plc-paper);
+  --muted: #E0D090;
+  --accent: var(--plc-gold);
+  --accent-glow: var(--plc-gold-soft);
+  --border: var(--plc-char-2);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+
+  --shadow-soft: 0 12px 30px rgba(0,0,0,0.35);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
