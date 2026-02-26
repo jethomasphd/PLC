@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080C1A">
+  <meta name="description" content="Porch Light Council — a calm, anonymous bulletin board for a local fatherhood group. No accounts. No feed. No noise.">
+  <meta property="og:title" content="Porch Light Council">
+  <meta property="og:description" content="A calm, anonymous bulletin board for fathers. No accounts. No feed. No noise. Just a porch light that stays on.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
   <title>Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -32,6 +37,13 @@
         <div class="label">Last Time Around</div>
         <div id="last-meetup">
           <p class="loading">Loading...</p>
+        </div>
+      </section>
+
+      <section>
+        <div class="label">Latest from the Thread</div>
+        <div id="latest-thread">
+          <p class="thread-quiet">Nothing yet. The porch is quiet.</p>
         </div>
       </section>
 
@@ -72,8 +84,8 @@
 
         const lm = data.lastMeetup;
         document.getElementById('last-meetup').innerHTML = `
-          <ul class="topic-list">${lm.topics.map(t => `<li>${t}</li>`).join('')}</ul>
           ${lm.takeaway ? `<div class="takeaway">${lm.takeaway}</div>` : ''}
+          <ul class="topic-list">${lm.topics.map(t => `<li>${t}</li>`).join('')}</ul>
         `;
 
         const or = data.openReading;
@@ -86,7 +98,38 @@
       }
     }
 
+    async function loadLatestThread() {
+      try {
+        const res = await fetch('/api/messages?limit=3');
+        const data = await res.json();
+
+        if (!data.messages || data.messages.length === 0) {
+          document.getElementById('latest-thread').innerHTML =
+            '<p class="thread-quiet">Nothing yet. The porch is quiet. <a href="/thread">Be the first.</a></p>';
+          return;
+        }
+
+        const el = document.getElementById('latest-thread');
+        el.innerHTML = data.messages.map(msg => `
+          <div class="thread-preview">
+            <span class="message-type ${msg.type.toLowerCase()}">${msg.type}</span>
+            <span class="thread-preview-body">${escapeHtml(msg.body.length > 120 ? msg.body.substring(0, 120) + '...' : msg.body)}</span>
+          </div>
+        `).join('') + '<a href="/thread" class="thread-more">View all &rarr;</a>';
+      } catch (e) {
+        document.getElementById('latest-thread').innerHTML =
+          '<p class="thread-quiet">Nothing yet. The porch is quiet. <a href="/thread">Be the first.</a></p>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     loadBoard();
+    loadLatestThread();
   </script>
 </body>
 </html>
