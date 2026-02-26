@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080C1A">
+  <meta name="description" content="Thread — messages from the Porch Light Council. Wins, struggles, asks, offers, readings.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
   <title>Thread — Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -33,7 +35,7 @@
       </div>
 
       <div id="messages-list">
-        <div class="loading">Loading messages...</div>
+        <div class="loading">Loading...</div>
       </div>
 
       <!-- Compose -->
@@ -111,7 +113,7 @@
 
     async function loadMessages(type) {
       const list = document.getElementById('messages-list');
-      list.innerHTML = '<div class="loading">Loading messages...</div>';
+      list.innerHTML = '<div class="loading">Loading...</div>';
 
       try {
         let url = '/api/messages?limit=25';
@@ -120,7 +122,7 @@
         const data = await res.json();
 
         if (!data.messages || data.messages.length === 0) {
-          list.innerHTML = '<div class="empty-state">No messages yet. Be the first to post.</div>';
+          list.innerHTML = '<div class="empty-state">The porch is quiet. Pull up a chair and say what matters.</div>';
           return;
         }
 
@@ -135,7 +137,7 @@
           </div>
         `).join('');
       } catch (e) {
-        list.innerHTML = '<div class="empty-state">No messages yet. Be the first to post.</div>';
+        list.innerHTML = '<div class="empty-state">The porch is quiet. Pull up a chair and say what matters.</div>';
       }
     }
 

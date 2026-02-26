@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080C1A">
+  <meta name="description" content="Ledger — a rolling record of Porch Light Council meetups. Topics, takeaways, and next actions.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
   <title>Ledger — Porch Light Council</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -24,7 +26,7 @@
       <h2 class="page-title">Ledger</h2>
 
       <div id="ledger-list">
-        <div class="loading">Loading ledger...</div>
+        <div class="loading">Loading...</div>
       </div>
 
       <!-- Compose ledger entry (facilitators) -->
@@ -77,7 +79,7 @@
         const data = await res.json();
 
         if (!data.entries || data.entries.length === 0) {
-          list.innerHTML = '<div class="empty-state">No ledger entries yet.</div>';
+          list.innerHTML = '<div class="empty-state">No records yet. The first chapter starts at the next meetup.</div>';
           return;
         }
 
@@ -96,7 +98,7 @@
           </div>
         `).join('');
       } catch (e) {
-        list.innerHTML = '<div class="empty-state">No ledger entries yet.</div>';
+        list.innerHTML = '<div class="empty-state">No records yet. The first chapter starts at the next meetup.</div>';
       }
     }
 

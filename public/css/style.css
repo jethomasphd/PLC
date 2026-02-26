@@ -709,6 +709,46 @@ textarea {
 .type-offer { color: #B89868; }
 .type-reading { color: #A088A8; }
 
+/* ── Board: Thread preview ── */
+
+.thread-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.thread-preview:last-of-type {
+  border-bottom: none;
+}
+
+.thread-preview-body {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.thread-quiet {
+  color: var(--muted);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+
+.thread-quiet a {
+  color: var(--accent);
+}
+
+.thread-more {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
 /* ── Footer ── */
 
 .site-footer {
